@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "repository": {
+    "id": "local.media-pipeline-assistant.repo",
+    "name": "Media Pipeline Assistant"
+  },
+  "plugins": [
+    {
+      "id": "local.media-pipeline-assistant",
+      "name": "Media Pipeline Assistant",
+      "version": "0.1.0",
+      "description": "唯讀診斷 DIAN115 整理失敗、整理佇列與手動整理上下文，作為後續 Smart Rescue 自動補救流程的安全基線。",
+      "author": "Local Publisher",
+      "package_url": "local.media-pipeline-assistant-0.1.0.d115p",
+      "sha256": "1dbbcd2480e7f12fcf173097619f9b79cd86b5951d1d2f8a1b73fa158752ae8f",
+      "runtime": {
+        "kind": "wasm",
+        "protocol": "dian115:wasm@1",
+        "autostart": true,
+        "trust_level": "wasm-sandbox"
+      },
+      "permissions": {
+        "apis": [
+          {
+            "method": "GET",
+            "path": "/api/organize/history",
+            "reason": "讀取整理歷史並找出失敗案例"
+          },
+          {
+            "method": "GET",
+            "path": "/api/organize/history/:id/detail",
+            "reason": "讀取單筆整理失敗的詳細資訊"
+          },
+          {
+            "method": "GET",
+            "path": "/api/organize/history/:id/manual-organize-context",
+            "reason": "讀取單筆失敗項目的手動整理上下文"
+          },
+          {
+            "method": "GET",
+            "path": "/api/organize/queue",
+            "reason": "讀取目前待整理佇列"
+          },
+          {
+            "method": "GET",
+            "path": "/api/organize/rules",
+            "reason": "讀取整理規則以理解失敗項目的來源規則"
+          }
+        ]
+      },
+      "tags": [
+        "organize",
+        "diagnostics",
+        "read-only"
+      ]
+    }
+  ]
+}
