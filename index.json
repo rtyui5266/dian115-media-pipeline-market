@@ -9,7 +9,7 @@
       "id": "local.media-pipeline-assistant",
       "name": "Media Pipeline Assistant",
       "version": "0.1.1",
-      "description": "唯讀診斷 DIAN115 整理失敗、整理佇列與手動整理上下文，作為後續 Smart Rescue 自動補救流程的安全基線。",
+      "description": "唯讀分析 DIAN115 整理歷史，在 WASM runtime 解析完整回應、統計 status 與 rule_id=2，並篩出 failed 案例，作為後續 Smart Rescue 自動補救流程的安全基線。",
       "author": "Local Publisher",
       "package_url": "local.media-pipeline-assistant-0.1.1.d115p",
       "sha256": "54785c9c09677b962e6dabbdf25ca1428a405b181f352cb3dc5225010f18a535",
