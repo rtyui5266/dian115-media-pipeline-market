@@ -8,11 +8,11 @@
     {
       "id": "local.media-pipeline-assistant",
       "name": "Media Pipeline Assistant",
-      "version": "0.1.1",
-      "description": "唯讀分析 DIAN115 整理歷史，在 WASM runtime 解析完整回應、統計 status 與 rule_id=2，並篩出 failed 案例，作為後續 Smart Rescue 自動補救流程的安全基線。",
+      "version": "0.1.2",
+      "description": "唯讀使用 DIAN115 live-proven status=failed&page=1&page_size=20 取得 bounded history，再於 WASM 篩選 rule_id=2，建立 Smart Rescue 安全候選讀取基線。",
       "author": "Local Publisher",
-      "package_url": "local.media-pipeline-assistant-0.1.1.d115p",
-      "sha256": "54785c9c09677b962e6dabbdf25ca1428a405b181f352cb3dc5225010f18a535",
+      "package_url": "local.media-pipeline-assistant-0.1.2.d115p",
+      "sha256": "59066c97e8084868cbb22cc8c7d71d9f64f12f1fe3ef658247f895137f70dd5c",
       "runtime": {
         "kind": "wasm",
         "protocol": "dian115:wasm@1",
