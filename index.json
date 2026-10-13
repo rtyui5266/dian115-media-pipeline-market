@@ -8,11 +8,11 @@
     {
       "id": "local.media-pipeline-assistant",
       "name": "Media Pipeline Assistant",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "description": "透過 localhost read-only bridge 快速讀取 Rule 2 failed，分類失敗原因；對明確 gRPC/CD2 timeout（context deadline exceeded / rpc DeadlineExceeded） 僅使用 DIAN native 單筆 history DELETE 解除 suppression。",
       "author": "Local Publisher",
-      "package_url": "local.media-pipeline-assistant-0.1.5.d115p",
-      "sha256": "a15f2e25b331d91bc397845c3209a48413c48d02d7ec23ef19b1fd33396cbf5e",
+      "package_url": "local.media-pipeline-assistant-0.1.6.d115p",
+      "sha256": "7c6c2608c14df738350faae2113753a2698cba3b1b83666ca28d4305d1b64e16",
       "runtime": {
         "kind": "wasm",
         "protocol": "dian115:wasm@1",
