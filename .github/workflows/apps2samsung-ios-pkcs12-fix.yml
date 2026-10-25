@@ -1,0 +1,116 @@
+name: Apps2Samsung iOS PKCS12 fix IPA
+on:
+  push:
+    branches: [ios-apps2samsung-pkcs12]
+    paths:
+      - .github/workflows/apps2samsung-ios-pkcs12-fix.yml
+      - scripts/apps2samsung-ios-pkcs12-patch.py
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ios:
+    runs-on: xcode-27
+    timeout-minutes: 70
+    steps:
+      - name: Checkout local patch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Fetch pinned Apps2Samsung source
+        uses: actions/checkout@v7
+        with:
+          repository: Apps2Samsung/Apps2Samsung
+          ref: 506bc4fcb27eec4dd77eb6a2a38df82ac26148e7
+          path: apps2samsung
+          persist-credentials: false
+      - name: Fetch pinned TizenSdb source
+        uses: actions/checkout@v7
+        with:
+          repository: PatrickSt1991/tizen-sdb
+          ref: eb254cea9f7719318d9e59aedcf0b6d65e2abf8e
+          path: tizen-sdb
+          persist-credentials: false
+      - name: Apply compatibility patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C apps2samsung rev-parse HEAD)" = 506bc4fcb27eec4dd77eb6a2a38df82ac26148e7
+          test "$(git -C tizen-sdb rev-parse HEAD)" = eb254cea9f7719318d9e59aedcf0b6d65e2abf8e
+          python3 scripts/apps2samsung-ios-pkcs12-patch.py
+          grep -Fq 'X509KeyStorageFlags.EphemeralKeySet' tizen-sdb/src/TizenSdb.Core/SigningManager/TizenWgtSigner.cs
+          grep -Fq 'Version="1.1.7-iosfix.20261025"' apps2samsung/Apps2Samsung.Core/Apps2Samsung.Core.csproj
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - name: Install MAUI workloads
+        shell: bash
+        run: dotnet workload install maui-ios maui-android
+      - name: Select matching Xcode
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACK=$(ls -d "$DOTNET_ROOT"/packs/Microsoft.iOS.Sdk.net*_* | sort -V | tail -1)
+          XCODE_VERSION=${PACK##*_}
+          if [ -d "/Applications/Xcode_${XCODE_VERSION}.app" ]; then
+            sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app"
+          else
+            echo "::warning::Xcode ${XCODE_VERSION} missing, using default"
+          fi
+          xcodebuild -version
+      - name: Pack patched TizenSdb.Core as local NuGet
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p apps2samsung/local-nuget
+          dotnet pack tizen-sdb/src/TizenSdb.Core/TizenSdb.Core.csproj \
+            -c Release -p:DesktopOnly=true \
+            -p:Version=1.1.7-iosfix.20261025 \
+            -o "$PWD/apps2samsung/local-nuget"
+          test -f apps2samsung/local-nuget/TizenSdb.Core.1.1.7-iosfix.20261025.nupkg
+      - name: Build unsigned device IPA
+        shell: bash
+        working-directory: apps2samsung
+        run: |
+          set -euo pipefail
+          dotnet publish Apps2Samsung.Mobile/Apps2Samsung.Mobile.csproj \
+            -c Release -f net10.0-ios \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -p:EnableCodeSigning=false \
+            -p:BuildIpa=true \
+            -p:ApplicationDisplayVersion=3.0.0 \
+            -p:ApplicationVersion=20261025 \
+            -o publish/ios
+          IPA=$(find publish/ios Apps2Samsung.Mobile/bin -name '*.ipa' -type f | head -n 1)
+          test -n "$IPA"
+          mkdir -p ../dist
+          cp "$IPA" ../dist/Apps2Samsung-v3.0.0-beta-ios-pkcs12fix.ipa
+      - name: Inspect IPA and generate checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, plistlib, re
+          from pathlib import Path
+          from zipfile import ZipFile
+          p = Path('dist/Apps2Samsung-v3.0.0-beta-ios-pkcs12fix.ipa')
+          with ZipFile(p) as z:
+              info = [x for x in z.namelist() if re.fullmatch(r'Payload/[^/]+\.app/Info\.plist', x)]
+              assert len(info) == 1, f'Unexpected Info.plist count: {len(info)}'
+              d = plistlib.loads(z.read(info[0]))
+              assert d['CFBundleIdentifier'] == 'nl.madebypatrick.apps2samsung', d['CFBundleIdentifier']
+              assert d['CFBundleShortVersionString'] == '3.0.0'
+          h = hashlib.sha256(p.read_bytes()).hexdigest()
+          print(f'IPA_VERIFIED=true SHA256={h} BYTES={p.stat().st_size}')
+          Path('dist/SHA256SUMS.txt').write_text(f'{h}  {p.name}\n', encoding='ascii')
+          PY
+      - name: Upload patched unsigned IPA
+        uses: actions/upload-artifact@v7
+        with:
+          name: Apps2Samsung-iOS-PKCS12fix-20261025
+          path: |
+            dist/Apps2Samsung-v3.0.0-beta-ios-pkcs12fix.ipa
+            dist/SHA256SUMS.txt
+          retention-days: 7
+          if-no-files-found: error
